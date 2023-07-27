@@ -14,7 +14,7 @@ MEMORY
 	LINKER_DT_REGIONS()
 
 	/* Used by and documented in include/linker/intlist.ld */
-	MMIO_REGION	(wx)	:	ORIGIN = 0x10050000, LENGTH = 2K
+	MMIO_REGION	(wx)	:	ORIGIN = 0x10050000, LENGTH = 32K
 }
 
 SECTIONS
