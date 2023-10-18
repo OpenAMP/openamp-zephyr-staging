@@ -1,0 +1,39 @@
+/*
+ * Copyright (c) 2019 Stephanos Ioannidis <root@stephanos.io>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <arm/xilinx/zynqmp_rpu.dtsi>
+
+&soc {
+	flash1: flash@3ef00000 {
+		compatible = "soc-nv-flash";
+		reg = <0x3ef00000 DT_SIZE_K(256)>;
+	};
+
+	sram1: memory@0 {
+		compatible = "mmio-sram";
+		reg = <0 DT_SIZE_M(64)>;
+	};
+};
+
+&cpu0 {
+	status = "disabled";
+};
+
+&cpu1 {
+	status = "okay";
+};
+
+&rpu1_ipi {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&ttc2 {
+	status = "okay";
+};

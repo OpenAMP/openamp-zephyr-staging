@@ -4,21 +4,56 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <arm/xilinx/zynqmp.dtsi>
+#include <mem.h>
+#include <arm/armv7-r.dtsi>
+#include <zephyr/dt-bindings/interrupt-controller/arm-gic.h>
+#include <zephyr/dt-bindings/ethernet/xlnx_gem.h>
 
 / {
-	cpus {
+	cpus: cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		cpu@0 {
+		cpu0: cpu@0 {
+			status = "okay";
 			device_type = "cpu";
 			compatible = "arm,cortex-r5f";
 			reg = <0>;
 		};
+
+		cpu1: cpu@1 {
+			status = "disabled";
+			device_type = "cpu";
+			compatible = "arm,cortex-r5f";
+			reg = <0>;
+		};
+
+		cpu1: cpu@1 {
+			status = "disabled";
+			device_type = "cpu";
+			compatible = "arm,cortex-r5f";
+			reg = <1>;
+		};
 	};
 
-	soc {
+	soc: soc {
+
+		interrupt-parent = <&gic>;
+
+		gic: interrupt-controller@f9000000 {
+			compatible = "arm,gic-v1", "arm,gic";
+			reg = <0xf9000000 0x1000>,
+					<0xf9001000 0x100>;
+			interrupt-controller;
+			#interrupt-cells = <4>;
+			status = "okay";
+		};
+
+		ocm: memory@fffe0000 {
+			compatible = "zephyr,memory-region", "xlnx,zynq-ocm";
+			reg = <0xfffe0000 DT_SIZE_K(128)>;
+			zephyr,memory-region = "OCM";
+		};
 
 		rpu0_ipi: zynqmp-ipi@ff310000 {
 			status = "disabled";
@@ -96,15 +131,39 @@
 			};
 		};
 
-		interrupt-parent = <&gic>;
+		ttc1: timer@ff120000 {
+			compatible = "xlnx,ttcps";
+			status = "disabled";
+			interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>,
+				     <GIC_SPI 40 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>,
+				     <GIC_SPI 41 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>;
+			interrupt-names = "irq_0", "irq_1", "irq_2";
+			reg = <0xff120000 0x1000>;
+		};
 
-		gic: interrupt-controller@f9000000 {
-			compatible = "arm,gic-v1", "arm,gic";
-			reg = <0xf9000000 0x1000>,
-					<0xf9001000 0x100>;
-			interrupt-controller;
-			#interrupt-cells = <4>;
-			status = "okay";
+		ttc2: timer@ff130000 {
+			compatible = "xlnx,ttcps";
+			status = "disabled";
+			interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>,
+				     <GIC_SPI 43 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>,
+				     <GIC_SPI 44 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>;
+			interrupt-names = "irq_0", "irq_1", "irq_2";
+			reg = <0xff130000 0x1000>;
+		};
+
+		uart1: uart@ff010000 {
+			compatible = "xlnx,xuartps";
+			reg = <0xff010000 0x4c>;
+			status = "disabled";
+			interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL
+					IRQ_DEFAULT_PRIORITY>;
+			interrupt-names = "irq_0";
 		};
 	};
 };

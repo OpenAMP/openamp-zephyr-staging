@@ -1,0 +1,9 @@
+sample:
+  description: Xilinx IPI mailbox driver
+tests:
+  sample.ipm.ipm_xlnx:
+    build_only: true
+    platform_allow: qemu_cortex_r5
+    integration_platforms:
+      - qemu_cortex_r5
+    tags: samples ipm

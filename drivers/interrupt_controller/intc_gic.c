@@ -26,10 +26,19 @@ BUILD_ASSERT(ARRAY_SIZE(cpu_mpid_list) >= CONFIG_MP_MAX_NUM_CPUS,
 
 void arm_gic_irq_enable(unsigned int irq)
 {
+	uint8_t cpu_mask = 0;
+	uint8_t *itarget_reg;
 	int int_grp, int_off;
 
 	int_grp = irq / 32;
 	int_off = irq % 32;
+
+	itarget_reg = (uint8_t *)(GICD_ITARGETSRn);
+	itarget_reg += irq;
+
+	cpu_mask = BIT(cpu_mpid_list[0]);
+
+	sys_write8(cpu_mask, (mem_addr_t)itarget_reg);
 
 	sys_write32((1 << int_off), (GICD_ISENABLERn + int_grp * 4));
 }
@@ -37,10 +46,20 @@ void arm_gic_irq_enable(unsigned int irq)
 void arm_gic_irq_disable(unsigned int irq)
 {
 	int int_grp, int_off;
+	uint8_t cpu_mask = 0, reg_val = 0;
+	uint8_t *itarget_reg;
 
 	int_grp = irq / 32;
 	int_off = irq % 32;
 
+	itarget_reg = (uint8_t *)(GICD_ITARGETSRn);
+	itarget_reg += irq;
+	cpu_mask = BIT(cpu_mpid_list[0]);
+
+	reg_val = sys_read8((mem_addr_t)itarget_reg);
+	reg_val &= (~cpu_mask);
+
+	sys_write8(reg_val, (mem_addr_t)itarget_reg);
 	sys_write32((1 << int_off), (GICD_ICENABLERn + int_grp * 4));
 }
 
@@ -146,19 +165,13 @@ static void gic_dist_init(void)
 {
 	unsigned int gic_irqs, i;
 	uint8_t cpu_mask = 0;
-	uint32_t reg_val;
+	uint32_t reg_val, val;
 
 	gic_irqs = sys_read32(GICD_TYPER) & 0x1f;
 	gic_irqs = (gic_irqs + 1) * 32;
 	if (gic_irqs > 1020) {
 		gic_irqs = 1020;
 	}
-
-	/*
-	 * Disable the forwarding of pending interrupts
-	 * from the Distributor to the CPU interfaces
-	 */
-	sys_write32(0, GICD_CTLR);
 
 	/*
 	 * Enable all global interrupts distributing to CPUs listed
@@ -171,9 +184,22 @@ static void gic_dist_init(void)
 	}
 	reg_val = cpu_mask | (cpu_mask << 8) | (cpu_mask << 16)
 		| (cpu_mask << 24);
+
 	for (i = GIC_SPI_INT_BASE; i < gic_irqs; i += 4) {
-		sys_write32(reg_val, GICD_ITARGETSRn + i);
+		val = sys_read32(GICD_ITARGETSRn + i);
+		val &= ~(reg_val);
+		sys_write32(val, GICD_ITARGETSRn + i);
 	}
+
+	/* another core has already initialized interrupts */
+	if ((sys_read32(GICD_CTLR) & 0x1) == 1)
+		return;
+
+	/*
+	 * Disable the forwarding of pending interrupts
+	 * from the Distributor to the CPU interfaces
+	 */
+	sys_write32(0, GICD_CTLR);
 
 	/*
 	 * Set all global interrupts to be level triggered, active low.

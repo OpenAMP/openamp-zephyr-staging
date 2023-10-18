@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2019 Lexmark International, Inc.
+ * Copyright (c) 2023 AMD-Xilinx, Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
  */
 
-/dts-v1/;
 #include <arm/xilinx/zynqmp_rpu0.dtsi>
 
 / {
@@ -13,12 +13,15 @@
 	compatible = "xlnx,zynqmp-qemu";
 
 	chosen {
-		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
+		zephyr,sram = &sram0;
 		zephyr,console = &uart1;
 		zephyr,shell-uart = &uart1;
-		zephyr,ocm = &ocm;
 	};
+};
+
+&rpu0_ipi {
+	status = "okay";
 };
 
 &uart1 {
@@ -29,5 +32,5 @@
 
 &ttc1 {
 	status = "okay";
-	clock-frequency = <5000000>;
+	clock-frequency = <500000000>;
 };
