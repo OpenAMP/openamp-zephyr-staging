@@ -1,0 +1,22 @@
+/{
+	soc {
+		virtio_mmio@a003e00 {
+			dma-coherent;
+			interrupt-parent = <&gic>;
+			interrupts = <0x00 0x2f 0x01 0x00>;
+			reg = <0x00 0xa003e00 0x00 0x200>;
+			compatible = "virtio,mmio";
+			status = "okay";
+			label = "virtio0";
+			memory-region = <&ram>;
+			virtio0: rng {
+			label = "virt-rng";
+			compatible = "virtio-rng";
+			};
+		};
+	};
+
+	chosen {
+		zephyr,entropy = &virtio0;
+	};
+};
